@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PECAHAN – Toko Kue Chef Pecah</title>
+<style>
+:root{--bg:#fff4e0;--ink:#4a2c14;--choc:#7a4a21;--pink:#ff8fab;--gold:#ffb703;--mint:#2a9d8f;--card:#fffdf8;--red:#e76f51}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg) radial-gradient(circle at 10% 10%,#ffe0b2 0 90px,transparent 91px),radial-gradient(circle at 92% 85%,#ffc8dd 0 120px,transparent 121px);background-attachment:fixed}
+#app{max-width:980px;margin:0 auto;padding:14px}
+h1{font-size:clamp(34px,7vw,64px);margin:6px 0;color:var(--choc);letter-spacing:1px;text-shadow:3px 3px 0 var(--gold)}
+.sub{font-size:18px;margin:0 0 12px}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:10px 16px;font-weight:700;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--mint);outline-offset:2px}
+.b{background:var(--mint);color:#fff;box-shadow:0 4px 0 #1b6b61;font-size:18px}
+.b2{background:#fff;color:var(--choc);border:3px solid var(--choc);box-shadow:0 3px 0 var(--choc)}
+button:active{transform:translateY(3px);box-shadow:none}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:14px 0}
+.lv{background:var(--card);border:3px solid var(--choc);border-radius:18px;padding:12px;text-align:left;box-shadow:0 5px 0 var(--choc);min-height:128px}
+.lv[disabled]{opacity:.5;cursor:not-allowed}
+.lv b{display:block;font-size:20px;color:var(--red)}
+.lv span{display:block;font-size:14px;margin:4px 0;font-weight:400}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ttl{font-size:22px;font-weight:800;color:var(--choc)}
+.st{background:#fff;border:3px solid var(--gold);border-radius:14px;padding:6px 12px;font-weight:700}
+.prog{height:14px;background:#fff;border:3px solid var(--choc);border-radius:10px;margin:10px 0;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--pink);transition:width .4s}
+.card{background:var(--card);border:4px solid var(--choc);border-radius:22px;padding:16px;box-shadow:0 6px 0 var(--choc)}
+.story{background:#fff0c9;border-radius:14px;padding:10px 14px;font-size:17px;margin-bottom:10px}
+.ask{font-size:clamp(19px,3vw,26px);font-weight:800;text-align:center;margin:8px 0}
+.cmp,.row{display:flex;justify-content:center;align-items:center;gap:clamp(8px,3vw,28px);flex-wrap:wrap;margin:10px 0}
+.it{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:18px;background:#fff;border:3px solid #e8d3b0}
+.pick .it{cursor:pointer;border-color:var(--choc)}
+.pick .it:hover{background:#fff0c9}
+.it.sel{border-color:var(--mint);background:#d8f3ee}
+.pie{width:clamp(95px,20vw,150px);height:auto}
+.pie path{cursor:default}
+.shade path{cursor:pointer}
+.fr{display:inline-flex;flex-direction:column;align-items:center;font-size:clamp(26px,5vw,40px);font-weight:900;line-height:1.1;color:var(--choc)}
+.fr b:first-child{border-bottom:5px solid var(--choc);padding:0 10px}
+.slot{width:70px;height:70px;border:4px dashed var(--choc);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;background:#fff}
+.signs{display:flex;justify-content:center;gap:14px;margin:10px 0}
+.sg{width:78px;height:78px;font-size:42px;background:var(--gold);color:var(--choc);box-shadow:0 5px 0 #c98a00;cursor:grab}
+.fb{min-height:54px;margin:8px 0;padding:10px 14px;border-radius:14px;font-size:17px;background:#f6f0e6}
+.fb.ok{background:#d8f3ee}
+.placed{min-height:50px;font-size:24px;font-weight:800;text-align:center;color:var(--mint)}
+.tag{display:inline-block;background:#fff;border:2px solid var(--gold);border-radius:20px;padding:4px 12px;margin:3px;font-size:15px}
+.tag.off{opacity:.4;filter:grayscale(1)}
+.big{font-size:60px;text-align:center}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+.pop{animation:pop .35s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ===== Utilitas ===== */
+const $=s=>document.querySelector(s), app=$('#app');
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const cmpF=(a,b)=>{const x=a[0]*b[1],y=b[0]*a[1];return x>y?'>':x<y?'<':'='};
+const ft=f=>f[0]+'/'+f[1];
+const fh=f=>`<span class="fr"><b>${f[0]}</b><b>${f[1]}</b></span>`;
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const uniq=(n,lo,hi)=>{const s=new Set;while(s.size<n)s.add(R(lo,hi));return[...s]};
+const SY={'<':'&lt;','>':'&gt;','=':'='};
+const WORD={'<':'lebih kecil dari','>':'lebih besar dari','=':'sama dengan'};
+
+/* ===== Penyimpanan ===== */
+const DEF=()=>({un:1,st:{},coins:0,ach:{},mu:1});
+function load(){try{return Object.assign(DEF(),JSON.parse(localStorage.getItem('pecahan_v1')||'{}'))}catch(e){return DEF()}}
+function save(){try{localStorage.setItem('pecahan_v1',JSON.stringify(S))}catch(e){}}
+let S=load(),G=null;
+
+/* ===== Audio (WebAudio lokal) ===== */
+let AC,mi,started=0;
+function snd(f,d=.15,t='sine',v=.15,at=0){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),T=AC.currentTime+at;o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,T);g.gain.exponentialRampToValueAtTime(.001,T+d);o.connect(g);g.connect(AC.destination);o.start(T);o.stop(T+d)}catch(e){}}
+const sGood=()=>{snd(523,.12);snd(659,.12,'sine',.15,.1);snd(784,.22,'sine',.15,.2)};
+const sBad=()=>snd(260,.25,'triangle',.12);
+const sWin=()=>[523,659,784,1047].forEach((f,i)=>snd(f,.25,'square',.08,i*.15));
+function music(){clearInterval(mi);if(!S.mu)return;const n=[262,330,392,440,392,330,294,349];let i=0;mi=setInterval(()=>snd(n[i++%8],.4,'sine',.035),480)}
+document.addEventListener('pointerdown',()=>{if(!started){started=1;music()}});
+
+/* ===== Gambar kue (SVG) ===== */
+function pie(f,d,color,click){
+  let s=`<svg viewBox="-1.05 -1.05 2.1 2.1" class="pie${click?' shade':''}" aria-label="kue dibagi ${d}">`;
+  for(let i=0;i<d;i++){
+    const a0=2*Math.PI*i/d-Math.PI/2,a1=2*Math.PI*(i+1)/d-Math.PI/2;
+    const on=typeof f=='number'?i<f:f.has(i);
+    s+=`<path data-i="${i}" d="M0 0L${Math.cos(a0)} ${Math.sin(a0)}A1 1 0 0 1 ${Math.cos(a1)} ${Math.sin(a1)}Z" fill="${on?color:'#fffaf0'}" stroke="#7a4a21" stroke-width=".05" stroke-linejoin="round"/>`;
+  }
+  return s+'</svg>';
+}
+
+/* ===== Generator soal (jawaban selalu dihitung otomatis) ===== */
+function g1(){const d=R(3,10),x=R(1,d-1);let y;do y=R(1,d-1);while(y==x);return{k:'cmp',a:[x,d],b:[y,d]}}
+function g2(){const n=R(1,4),d1=R(n+1,10);let d2;do d2=R(n+1,10);while(d2==d1);return{k:'cmp',a:[n,d1],b:[n,d2]}}
+function g3(){const q=Math.random()<.5?g1():g2();q.k='pick';q.big=Math.random()<.6;return q}
+function g4(){const d1=[4,6,8,10][R(0,3)],d2=[3,5,7,9][R(0,3)];const A=[R(d1/2+1,d1-1),d1],B=[R(1,(d2-1)/2),d2];return Math.random()<.5?{k:'cmp',a:A,b:B}:{k:'cmp',a:B,b:A}}
+function g5(){const d=R(2,6),n=R(1,d-1),m=[6,8,10,12][R(0,3)];return{k:'shade',t:[n,d],m,mode:(m%d==0&&Math.random()<.5)?'eq':'gt'}}
+function g6(){const d=R(2,5),n=R(1,d-1),k=R(2,3),e=d*k;let m=n*k;if(Math.random()<.5){const z=m+(Math.random()<.5?1:-1);if(z>=1&&z<e)m=z}const A=[n,d],B=[m,e];return Math.random()<.5?{k:'cmp',a:A,b:B}:{k:'cmp',a:B,b:A}}
+function g7(){const dir=Math.random()<.5?'asc':'desc';let items;if(Math.random()<.5){const d=R(5,10);items=uniq(3,1,d-1).map(x=>[x,d])}else{const n=R(1,3);items=uniq(3,n+1,10).map(x=>[n,x])}return{k:'order',items:shuf(items),dir}}
+function g8(){let d1,d2;do{d1=R(2,10);d2=R(2,10)}while(d1==d2);return{k:'cmp',a:[R(1,d1-1),d1],b:[R(1,d2-1),d2]}}
+function g9(){for(;;){const items=[];for(let i=0;i<4;i++){const d=R(2,12);items.push([R(1,d-1),d])}if(items.every((p,i)=>items.every((q,j)=>i==j||cmpF(p,q)!='=')))return{k:'order',items,dir:Math.random()<.5?'asc':'desc'}}}
+const g10=()=>[g1,g4,g6,g8,g3,g5,g7,g9][R(0,7)]();
+
+const LV=[
+{t:'Kue Sama Besar',e:'🍰',g:'Membandingkan pecahan berpenyebut sama',s:'Chef Pecah memotong kue menjadi bagian sama besar. Siapa yang mendapat lebih banyak potongan?',gen:g1},
+{t:'Pizza Si Kembar',e:'🍕',g:'Membandingkan pecahan berpembilang sama',s:'Dua pizza dipotong berbeda. Ambil potongan yang sama banyak, tapi ukurannya berbeda!',gen:g2},
+{t:'Pilih Kue Terbesar',e:'🧁',g:'Memilih pecahan terbesar atau terkecil',s:'Pelanggan antre! Klik kue yang diminta agar mereka senang.',gen:g3},
+{t:'Patokan Setengah',e:'🥧',g:'Membandingkan dengan patokan ½',s:'Chef Pecah punya trik: bandingkan dulu dengan ½ (setengah).',gen:g4},
+{t:'Warnai Kuenya!',e:'🎨',g:'Membuat pecahan dengan mewarnai bagian kue',s:'Hias kue dengan krim. Warnai potongan sesuai pesanan pelanggan.',gen:g5},
+{t:'Kembar Senilai',e:'👯',g:'Pecahan senilai dan tanda sama dengan (=)',s:'Ada pecahan yang tampak beda tetapi nilainya sama. Cari tahu!',gen:g6},
+{t:'Antrean Kue',e:'🚶',g:'Mengurutkan 3 pecahan',s:'Susun kue di etalase sesuai urutan yang diminta.',gen:g7},
+{t:'Kali Silang',e:'✖️',g:'Membandingkan pecahan berpenyebut berbeda',s:'Penyebutnya beda! Pakai jurus kali silang milik Chef Pecah.',gen:g8},
+{t:'Parade Kue',e:'🎉',g:'Mengurutkan 4 pecahan berpenyebut berbeda',s:'Parade kue segera dimulai. Urutkan semua kue dengan benar!',gen:g9},
+{t:'Lomba Chef Cilik',e:'🏆',g:'Campuran semua jenis tantangan',s:'Final lomba! Selesaikan 8 tantangan campuran. Bonus jika selesai dalam 150 detik.',gen:g10}
+];
+const ACH=[['first','🥇','Langkah Pertama'],['perfect','💎','Tanpa Salah'],['combo','🔥','Combo 5'],['stars','⭐','15 Bintang'],['champ','👑','Juara Pecahan']];
+
+/* ===== Penjelasan & petunjuk ===== */
+function expl(a,b){
+  const s=cmpF(a,b);let t;
+  if(a[1]==b[1])t=`Penyebut sama (${a[1]}), jadi bandingkan pembilang: ${a[0]} ${s} ${b[0]}.`;
+  else if(a[0]==b[0])t=`Pembilang sama (${a[0]}). Makin besar penyebut, makin kecil potongannya.`;
+  else{const x=a[0]*b[1],y=b[0]*a[1];t=`Kali silang: ${a[0]}×${b[1]} = ${x} dan ${b[0]}×${a[1]} = ${y}. Karena ${x} ${s} ${y}.`}
+  return `${t} Jadi ${ft(a)} ${s} ${ft(b)}.`;
+}
+function hint(q){
+  if(q.k=='shade')return `Hitung bagian berwarna dibagi ${q.m}, lalu bandingkan dengan ${ft(q.t)} (coba kali silang).`;
+  if(q.k=='order')return `Bandingkan dua pecahan dulu. Cari yang paling ${q.dir=='asc'?'kecil':'besar'} lebih dahulu.`;
+  const a=q.a,b=q.b;
+  if(a[1]==b[1])return 'Penyebut sama, lihat pembilangnya. Pembilang lebih besar berarti nilainya lebih besar.';
+  if(a[0]==b[0])return 'Pembilang sama. Penyebut lebih besar berarti potongan lebih kecil.';
+  return 'Bandingkan dengan ½, atau kali silang: pembilang A × penyebut B, lalu pembilang B × penyebut A.';
+}
+const sortF=(items,dir)=>{const s=items.slice().sort((p,q)=>p[0]*q[1]-q[0]*p[1]);return dir=='asc'?s:s.reverse()};
+
+/* ===== Layar beranda ===== */
+function home(){
+  clearInterval(G&&G.tid);G=null;
+  const tot=Object.values(S.st).reduce((a,b)=>a+b,0);
+  app.innerHTML=`<div class="top"><div><h1>PECAHAN</h1><p class="sub">Toko Kue Chef Pecah · Kelas 5 · Membandingkan pecahan (&lt; , &gt; , =)</p></div>
+  <div class="bar"><span class="st">🪙 ${S.coins}</span><span class="st">⭐ ${tot}/30</span><button class="b2" id="mu">${S.mu?'🔊 Musik':'🔇 Musik'}</button></div></div>
+  <div class="map">${LV.map((l,i)=>`<button class="lv" data-i="${i}" ${i>=S.un?'disabled':''}><b>${l.e} Level ${i+1}</b>${l.t}<span>${l.g}</span>${i>=S.un?'🔒':'⭐'.repeat(S.st[i]||0)+'☆'.repeat(3-(S.st[i]||0))}</button>`).join('')}</div>
+  <div class="card"><b>Pencapaian:</b> ${ACH.map(a=>`<span class="tag ${S.ach[a[0]]?'':'off'}">${a[1]} ${a[2]}</span>`).join('')}
+  <div class="bar"><button class="b2" id="rs">🗑️ Hapus progres</button></div></div>`;
+  app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>start(+b.dataset.i));
+  $('#mu').onclick=()=>{S.mu=S.mu?0:1;save();music();home()};
+  $('#rs').onclick=()=>{if(confirm('Hapus semua progres?')){S=DEF();save();home()}};
+}
+
+/* ===== Permainan ===== */
+function start(i){
+  if(G)clearInterval(G.tid);
+  G={i,n:0,tot:i==9?8:5,score:0,mist:0,combo:0,mc:0,hints:0,t0:Date.now(),cur:null,qm:0,done:0,tid:0};
+  const L=LV[i];
+  app.innerHTML=`<div class="top"><button class="b2" id="bk">🗺️ Peta</button><div class="ttl">${L.e} Level ${i+1}: ${L.t}</div><div class="st" id="st"></div></div>
+  <div class="prog"><i id="pg"></i></div>
+  <div class="card"><div class="story">🧑‍🍳 <b>Misi:</b> ${L.s}<br><small>Tujuan: ${L.g}. Selesaikan ${G.tot} tantangan.</small></div>
+  <div class="ask" id="ask"></div><div id="qa"></div><div class="fb" id="fb"></div>
+  <div class="row"><button class="b2" id="ht">💡 Petunjuk</button><button class="b" id="nx" hidden>Lanjut ➜</button></div></div>`;
+  $('#bk').onclick=home;
+  $('#ht').onclick=()=>{G.hints++;fb('💡 '+hint(G.cur))};
+  $('#nx').onclick=()=>G.n>=G.tot?finish():newQ();
+  if(i==9)G.tid=setInterval(stat,1000);
+  newQ();
+}
+function stat(){
+  const el=$('#st');if(!el)return;
+  el.innerHTML=`⭐ ${G.score} · 🔥 ${G.combo}${G.i==9?` · ⏱ ${Math.floor((Date.now()-G.t0)/1000)}d`:''}`;
+  $('#pg').style.width=(G.n/G.tot*100)+'%';
+}
+function fb(t,ok){const f=$('#fb');f.textContent=t;f.className='fb'+(ok?' ok pop':'')}
+function okAns(txt){
+  if(G.done)return;G.done=1;
+  const first=G.qm==0,p=first?10+Math.min(G.combo,5)*2:5;
+  G.score+=p;
+  if(first){G.combo++;G.mc=Math.max(G.mc,G.combo)}else G.combo=0;
+  G.n++;sGood();stat();
+  fb(`✅ Hebat! +${p} poin${first&&G.combo>1?` (combo ×${G.combo})`:''}. ${txt}`,1);
+  $('#nx').hidden=false;$('#ht').hidden=true;$('#nx').textContent=G.n>=G.tot?'Lihat hasil ➜':'Lanjut ➜';
+}
+function badAns(msg){
+  if(G.done)return;
+  G.qm++;G.mist++;G.combo=0;sBad();stat();
+  fb('🤔 Belum tepat, ayo coba lagi! '+msg+(G.qm>=2?' 💡 '+hint(G.cur):''));
+}
+function newQ(){
+  const q=G.cur=LV[G.i].gen();G.qm=0;G.done=0;
+  $('#nx').hidden=true;$('#ht').hidden=false;fb('Ayo kerjakan! Kalau bingung, tekan Petunjuk.');stat();
+  const qa=$('#qa'),ask=$('#ask');
+  if(q.k=='cmp'){
+    ask.textContent='Seret atau ketuk tanda yang tepat di antara dua pecahan!';
+    qa.innerHTML=`<div class="cmp"><div class="it">${pie(q.a[0],q.a[1],'#ff8fab')}${fh(q.a)}</div><div class="slot" id="slot">?</div><div class="it">${pie(q.b[0],q.b[1],'#ffb703')}${fh(q.b)}</div></div>
+    <div class="signs">${['<','=','>'].map(s=>`<button class="sg" draggable="true" data-s="${s}" aria-label="${WORD[s]}">${SY[s]}</button>`).join('')}</div>`;
+    const ans=s=>{if(G.done)return;$('#slot').textContent=s;cmpF(q.a,q.b)==s?okAns(expl(q.a,q.b)):badAns(`Kamu memilih ${s}.`)};
+    qa.querySelectorAll('.sg').forEach(b=>{b.onclick=()=>ans(b.dataset.s);b.ondragstart=e=>e.dataTransfer.setData('text',b.dataset.s)});
+    const sl=$('#slot');sl.ondragover=e=>e.preventDefault();sl.ondrop=e=>{e.preventDefault();const s=e.dataTransfer.getData('text');if(SY[s])ans(s)};
+  }else if(q.k=='pick'){
+    ask.textContent=q.big?'Klik kue yang LEBIH BESAR!':'Klik kue yang LEBIH KECIL!';
+    qa.innerHTML=`<div class="cmp pick">${[q.a,q.b].map((f,i)=>`<div class="it" data-i="${i}" tabindex="0">${pie(f[0],f[1],i?'#ffb703':'#ff8fab')}${fh(f)}</div>`).join('')}</div>`;
+    qa.querySelectorAll('.it').forEach(el=>{const go=()=>{
+      const bigIdx=cmpF(q.a,q.b)=='>'?0:1,want=q.big?bigIdx:1-bigIdx;
+      +el.dataset.i==want?okAns(expl(q.a,q.b)):badAns(`Kue itu bukan yang ${q.big?'terbesar':'terkecil'}.`)};
+      el.onclick=go;el.onkeydown=e=>{if(e.key=='Enter'||e.key==' ')go()}});
+  }else if(q.k=='shade'){
+    const sel=new Set;
+    ask.innerHTML=`Warnai kue agar bagian berwarna <u>${q.mode=='gt'?'LEBIH BESAR dari':'TEPAT SAMA dengan'}</u> ${fh(q.t)}`;
+    qa.innerHTML=`<div class="cmp"><div class="it" id="cake"></div><div class="it"><b>Kamu mewarnai</b><span class="fr" id="cnt"><b>0</b><b>${q.m}</b></span></div></div><div class="row"><button class="b" id="ck">Periksa ✔</button></div>`;
+    const draw=()=>{$('#cake').innerHTML=pie(sel,q.m,'#ff8fab',1);$('#cnt').firstChild.textContent=sel.size;
+      $('#cake').querySelectorAll('path').forEach(p=>p.onclick=()=>{if(G.done)return;const i=+p.dataset.i;sel.has(i)?sel.delete(i):sel.add(i);draw()})};
+    draw();
+    $('#ck').onclick=()=>{if(G.done)return;const s=sel.size;
+      if(!s)return fb('Ketuk potongan kue dulu untuk mewarnainya.');
+      const r=cmpF([s,q.m],q.t);
+      (q.mode=='gt'?r=='>':r=='=')?okAns(`Kamu mewarnai ${s}/${q.m}. ${expl([s,q.m],q.t)}`):badAns(`Kamu mewarnai ${s}/${q.m}, nilainya ${WORD[r]} ${ft(q.t)}.`)};
+  }else{
+    const asc=q.dir=='asc',sorted=sortF(q.items,q.dir),placed=[];
+    ask.textContent=asc?'Ketuk pecahan dari yang TERKECIL ke TERBESAR!':'Ketuk pecahan dari yang TERBESAR ke TERKECIL!';
+    qa.innerHTML=`<div class="cmp pick">${q.items.map((f,i)=>`<div class="it" data-i="${i}" tabindex="0">${pie(f[0],f[1],['#ff8fab','#ffb703','#8ecae6','#95d5b2'][i])}${fh(f)}</div>`).join('')}</div><div class="placed" id="pl">Urutanmu: …</div>`;
+    qa.querySelectorAll('.it').forEach(el=>{const go=()=>{
+      if(G.done||el.classList.contains('sel'))return;
+      const f=q.items[+el.dataset.i],need=sorted[placed.length];
+      if(cmpF(f,need)=='='){placed.push(f);el.classList.add('sel');$('#pl').textContent='Urutanmu: '+placed.map(ft).join('  '+(asc?'<':'>')+'  ');
+        if(placed.length==q.items.length)okAns('Urutan benar: '+sorted.map(ft).join(asc?' < ':' > ')+'.')}
+      else badAns(`${ft(f)} belum waktunya. Cari yang paling ${asc?'kecil':'besar'} di antara yang tersisa.`)};
+      el.onclick=go;el.onkeydown=e=>{if(e.key=='Enter'||e.key==' ')go()}});
+  }
+}
+
+/* ===== Hasil ===== */
+function finish(){
+  clearInterval(G.tid);
+  const sec=Math.floor((Date.now()-G.t0)/1000);
+  let bonus=0;if(G.i==9&&sec<=150)bonus=30;
+  const score=G.score+bonus,stars=G.mist==0?3:G.mist<=3?2:1,coins=Math.floor(score/5);
+  S.st[G.i]=Math.max(S.st[G.i]||0,stars);S.coins+=coins;S.un=Math.min(10,Math.max(S.un,G.i+2));
+  const was={...S.ach},tot=Object.values(S.st).reduce((a,b)=>a+b,0);
+  S.ach.first=1;if(G.mist==0)S.ach.perfect=1;if(G.mc>=5)S.ach.combo=1;if(tot>=15)S.ach.stars=1;if(G.i==9)S.ach.champ=1;
+  save();sWin();
+  const nw=ACH.filter(a=>S.ach[a[0]]&&!was[a[0]]);
+  const msg=stars==3?'Luar biasa! Kamu jago membandingkan pecahan!':stars==2?'Bagus sekali! Sedikit lagi sempurna.':'Kamu berhasil! Ulangi lagi untuk mendapat bintang lebih banyak.';
+  app.innerHTML=`<div class="card" style="text-align:center"><div class="big pop">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+  <h2>Level ${G.i+1} selesai: ${LV[G.i].t}</h2><p>${msg}</p>
+  <p class="ask">Skor ${score}${bonus?` (termasuk bonus waktu +${bonus})`:''} · 🪙 +${coins} · Kesalahan: ${G.mist} · Combo terbaik: ${G.mc}</p>
+  ${nw.length?`<p><b>Pencapaian baru!</b> ${nw.map(a=>`<span class="tag">${a[1]} ${a[2]}</span>`).join('')}</p>`:''}
+  <div class="row"><button class="b2" id="rp">🔁 Ulangi</button>${G.i<9?'<button class="b" id="nl">Level berikutnya ➜</button>':''}<button class="b2" id="mp">🗺️ Peta</button></div></div>`;
+  const i=G.i;$('#rp').onclick=()=>start(i);$('#mp').onclick=home;if($('#nl'))$('#nl').onclick=()=>start(i+1);
+}
+home();
+</script>
+</body>
+</html>
